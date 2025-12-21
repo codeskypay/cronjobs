@@ -1,22 +1,9 @@
 name: sirtheprogrammer
 
 on:
-  push:
-    branches: [main]
-
   schedule:
     - cron: "0 7,9,12,13,14 * * *"
-
   workflow_dispatch:
-    inputs:
-      force:
-        description: "Force commit even if no changes"
-        required: false
-        default: "false"
-
-concurrency:
-  group: auto-commit-main
-  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -24,65 +11,48 @@ permissions:
 jobs:
   auto_commit:
     runs-on: ubuntu-latest
-
     env:
       TZ: Africa/Dar_es_Salaam
-      MIN_COMMITS: 2
-      MAX_COMMITS: 10
+      CRONITOR_MONITOR: abcd1234
 
     steps:
-      - name: 🧪 Debug Info
+      - name: 🔔 Cronitor Start
         run: |
-          echo "Ref: $GITHUB_REF"
-          echo "Actor: $GITHUB_ACTOR"
-          echo "Repo: $GITHUB_REPOSITORY"
+          curl -fsS "https://cronitor.link/p/${CRONITOR_MONITOR}?state=run" || true
 
       - name: 📥 Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: 🕒 Update timestamp
+      - name: 🕒 Update file
         run: |
           date '+%Y-%m-%d %H:%M:%S %Z' > LAST_UPDATED
 
-      - name: 🔧 Configure Git
+      - name: 🔧 Git config
         run: |
           git config user.name "auto-bot"
           git config user.email "auto-bot@users.noreply.github.com"
 
-      - name: 🎲 Generate commits
+      - name: 🎲 Commit changes
         run: |
-          messages=(
-            "chore(bot): 🤖 automated sync"
-            "chore(bot): 🚀 pipeline activity"
-            "chore(bot): 🐐 legendary commit"
-            "chore(bot): 👻 ghost update"
-            "chore(bot): 🧠 system intelligence"
-            "chore(bot): 💣 chaos injected"
-            "chore(bot): 🟢 keep alive"
-            "chore(bot): 🔐 integrity pulse"
-          )
+          messages=("🤖 auto sync" "🚀 keep alive" "👻 ghost commit" "🐐 legendary")
+          n=$((RANDOM % 5 + 2))
 
-          count=$((RANDOM % (MAX_COMMITS - MIN_COMMITS + 1) + MIN_COMMITS))
-          echo "Commits to make: $count"
-
-          for ((i=1;i<=count;i++)); do
-            msg=${messages[RANDOM % ${#messages[@]}]}
-            echo "data $i - $(date)" > auto_file_$i.log
+          for ((i=1;i<=n;i++)); do
+            echo "update $i $(date)" > file_$i.txt
             git add -A
-
-            if git diff --cached --quiet; then
-              echo "No changes detected"
-              if [[ "${{ github.event.inputs.force }}" != "true" ]]; then
-                echo "Skipping commit"
-                continue
-              fi
-            fi
-
-            git commit -m "$msg"
-            sleep $((RANDOM % 5 + 1))
+            git commit -m "${messages[RANDOM % ${#messages[@]}]}" || true
+            sleep $((RANDOM % 4 + 1))
           done
 
-      - name: 🚀 Push changes
+      - name: 🚀 Push
         run: git push origin main
+
+      - name: ✅ Cronitor Success
+        if: success()
+        run: |
+          curl -fsS "https://cronitor.link/p/${CRONITOR_MONITOR}?state=complete" || true
+
+      - name: ❌ Cronitor Fail
+        if: failure()
+        run: |
+          curl -fsS "https://cronitor.link/p/${CRONITOR_MONITOR}?state=fail" || true
