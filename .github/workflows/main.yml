@@ -13,46 +13,46 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TZ: Africa/Dar_es_Salaam
-      CRONITOR_MONITOR: abcd1234
+      CRONITOR_URL: https://cronitor.link/p/ecb2ddbcc7f44884bb75c6d9bddc2b19/important-job
 
     steps:
-      - name: 🔔 Cronitor Start
+      - name: 🔔 Cronitor → RUN
         run: |
-          curl -fsS "https://cronitor.link/p/${CRONITOR_MONITOR}?state=run" || true
+          curl -fsS "${CRONITOR_URL}?state=run" || true
 
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🕒 Update file
+      - name: 🕒 Update marker
         run: |
           date '+%Y-%m-%d %H:%M:%S %Z' > LAST_UPDATED
 
-      - name: 🔧 Git config
+      - name: 🔧 Git setup
         run: |
           git config user.name "auto-bot"
           git config user.email "auto-bot@users.noreply.github.com"
 
-      - name: 🎲 Commit changes
+      - name: 🎲 Auto commits
         run: |
-          messages=("🤖 auto sync" "🚀 keep alive" "👻 ghost commit" "🐐 legendary")
+          msgs=("🤖 auto sync" "🚀 keep alive" "👻 ghost commit" "🐐 legendary")
           n=$((RANDOM % 5 + 2))
 
           for ((i=1;i<=n;i++)); do
             echo "update $i $(date)" > file_$i.txt
             git add -A
-            git commit -m "${messages[RANDOM % ${#messages[@]}]}" || true
+            git commit -m "${msgs[RANDOM % ${#msgs[@]}]}" || true
             sleep $((RANDOM % 4 + 1))
           done
 
       - name: 🚀 Push
         run: git push origin main
 
-      - name: ✅ Cronitor Success
+      - name: ✅ Cronitor → COMPLETE
         if: success()
         run: |
-          curl -fsS "https://cronitor.link/p/${CRONITOR_MONITOR}?state=complete" || true
+          curl -fsS "${CRONITOR_URL}?state=complete" || true
 
-      - name: ❌ Cronitor Fail
+      - name: ❌ Cronitor → FAIL
         if: failure()
         run: |
-          curl -fsS "https://cronitor.link/p/${CRONITOR_MONITOR}?state=fail" || true
+          curl -fsS "${CRONITOR_URL}?state=fail" || true
