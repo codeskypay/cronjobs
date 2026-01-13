@@ -2,7 +2,7 @@ name: sirtheprogrammer
 
 on:
   schedule:
-    - cron: "0 7,9,12,13,14 * * *"
+    - cron: "0 7,12,13,18 * * *"
   workflow_dispatch:
 
 permissions:
@@ -16,25 +16,25 @@ jobs:
       CRONITOR_URL: https://cronitor.link/p/ecb2ddbcc7f44884bb75c6d9bddc2b19/important-job
 
     steps:
-      - name: 🔔 Cronitor → RUN
+      - name: Cronitor → RUN
         run: |
           curl -fsS "${CRONITOR_URL}?state=run" || true
 
-      - name: 📥 Checkout
+      - name:  Checkout
         uses: actions/checkout@v4
 
-      - name: 🕒 Update marker
+      - name: Update marker
         run: |
           date '+%Y-%m-%d %H:%M:%S %Z' > LAST_UPDATED
 
-      - name: 🔧 Git setup
+      - name: Git setup
         run: |
           git config user.name "sirtheprogrammer"
           git config user.email "sirtheprogrammer@gmail.com"
 
-      - name: 🎲 Auto commits
+      - name: Auto commits
         run: |
-          msgs=("🤖 auto sync" "🚀 keep alive" "👻 ghost commit" "🐐 legendary")
+          msgs=("auto sync the repo" "keep alive and build config" "  commit changes on main branch" "upload build to server")
           n=$((RANDOM % 5 + 2))
 
           for ((i=1;i<=n;i++)); do
@@ -44,15 +44,15 @@ jobs:
             sleep $((RANDOM % 4 + 1))
           done
 
-      - name: 🚀 Push
+      - name: Push
         run: git push origin main
 
-      - name: ✅ Cronitor → COMPLETE
+      - name: Cronitor → COMPLETE
         if: success()
         run: |
           curl -fsS "${CRONITOR_URL}?state=complete" || true
 
-      - name: ❌ Cronitor → FAIL
+      - name:  Cronitor → FAIL
         if: failure()
         run: |
           curl -fsS "${CRONITOR_URL}?state=fail" || true
